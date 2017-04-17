@@ -1,0 +1,14 @@
+//subtract difference = 4-6
+@dif //define dif address at 16
+M=0 //sum = 0
+@4 //Access reg 4
+D=A //Assign 4 (current register)
+@dif //point to sum
+M=D+M //add D(4) to sum (0)
+@6 //Access r6
+D=A //assign 6 to D (replace)
+@dif //point to sum
+M=M-D //add sum (M=4) to D(D=6)
+(END) //label End next ROm
+@End
+0;JMP

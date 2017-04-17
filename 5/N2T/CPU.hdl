@@ -1,0 +1,47 @@
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    //ALU DECODE
+    Not(in=instruction[15], out=AInst); //figure out if it's an A instruction because instruction[15] is the first bit; first bit distates A instruction
+    Not(in=AInst, out=CInst); //C instruction if it's not an A instruction
+    And(a=CInst, b=instruction[5], out=toLoadA); //load the A register if it's a C instruction and if d2 is 1 because d2 says it should love the A register (and the D register)
+    Mux16(a=instruction, b=ALU, sel=toLoadA, out=toAReg); //decide whether the instruction or the ALU should be loaded to the A register depending on whether or not it's d2 and if there's a C instruction. 
+    Or(a=AInst, b=toLoadA, out=loadA); //if either there's an A instruction or the above has instructed it to load something to the A register, indicate to the A register that it should load value from the mux above.
+    ARegister(in=toAReg, load=loadA, out=Aout); //load the actual A register
+    Mux16(a=Aout, b=inM, sel=instruction[12], out=AMtoALU); //
+    And(a=CInst, b=instruction[4], out=loadD);
+    DRegister(in=ALU, load=loadD, out=Dout);
+
+    //ALU
+    ALU(x=Dout, y=AMtoALU, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=ALU, zr=zr, ng=ng);
+
+    //OUTPUT HANDLING
+    Or16(a=Aout, b=false, out[0..14]=addressM);
+    Or16(a=ALU, b=false, out=outM);
+    And(a=CInst, b=instruction[3], out=writeM);
+
+    //PC DECODE
+    And(a=zr, b=instruction[1], out=and1);
+    And(a=ng, b=instruction[2], out=and2);
+    Or(a=zr, b=ng, out=or1);
+    Not(in=or1, out=not1);
+    And(a=not1, b=instruction[0], out=and3);
+    Or(a=and1, b=and2, out=or2);
+    Or(a=or2, b=and3, out=or3);
+    And(a=CInst, b=or3, out=load);
+    Not(in=load, out=inc);
+   
+    //PC
+    PC(in=Aout, inc=inc, load=load, reset=reset, out[0..14]=pc); 
+}
