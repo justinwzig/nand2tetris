@@ -12,9 +12,15 @@ public class checkPt1Ziegelmueller {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, NullPointerException {
         try {
+            //import file
             String content = new String(Files.readAllBytes(Paths.get(importFile())));
+            //name modify
+            fName = fName.substring(0,fName.lastIndexOf("."))+"\"";
+            fPath = fPath.substring(0,fPath.lastIndexOf("."));
+            //write
             Files.write(Paths.get(fPath + ".hack"), content.getBytes());
-            println("wrote to " + fPath + " with name " + fName);
+            //print
+            println("wrote to " + fPath + " with name " + fName + ".hack");
         } catch (NullPointerException e) {
             println("no file chosen");
         }
